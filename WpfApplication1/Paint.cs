@@ -1,26 +1,14 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Drawing;
+using System.Collections.Generic;
 
-namespace painter
+//see https://github.com/KaitoHH/Painter
+//FIXME:stack不是泛型
+namespace WpfApplication1
 {
-    /********************************************************************************
-
-    ** 作者： Huang Hui
-
-    ** 创始时间：2015-10-16
-
-    ** 描述：
-
-    **    封装了一个画图库，只需调入需要作为画板的Graphics类即可
-
-    *********************************************************************************/
-
     class Paint
     {
         public enum MODE { ERASER, DOTS, LINES, CIRCLES, RECTANGLE, FILL_CIRCLE, FILL_RECTANGLE };
@@ -41,14 +29,15 @@ namespace painter
 
         //属性
         //****************************
-        public float penWidth {
+        public float penWidth
+        {
             get
             {
                 return _penWidth;
             }
             set
             {
-                _penWidth = value>0? value :_penWidth;
+                _penWidth = value > 0 ? value : _penWidth;
             }
         }
         public Color penColor
@@ -103,8 +92,8 @@ namespace painter
             }
         }
         //***********************************************
-        
-        public Paint(Graphics _target,int _width,int _height)//构造函数
+
+        public Paint(Graphics _target, int _width, int _height)//构造函数
         {
             undo = new Stack();
             redo = new Stack();
@@ -150,13 +139,13 @@ namespace painter
                 last.Dispose();
                 last = (Bitmap)grph.Clone();
             }
-            
+
             Graphics glast = Graphics.FromImage(last);
             Pen p = new Pen(_penColor, _penWidth);
             switch (_mode)
             {
                 case MODE.LINES:
-                    drawLine(endPoint,glast,p);
+                    drawLine(endPoint, glast, p);
                     break;
                 case MODE.CIRCLES:
                     drawEllipse(endPoint, glast, p);
@@ -189,16 +178,16 @@ namespace painter
             undo.Push(grph.Clone());
             grph.Dispose();
             grph = (Bitmap)last.Clone();
-            
+
         }
         //*************************************************
 
-        
+
         //图像生成函数
         //*************************************************
         public void drawLine(Point endPoint, Graphics g, Pen p)//直线
         {
-            g.FillEllipse(new SolidBrush(p.Color), _startPoint.X-_penWidth/2, _startPoint.Y - _penWidth / 2, _penWidth, _penWidth);
+            g.FillEllipse(new SolidBrush(p.Color), _startPoint.X - _penWidth / 2, _startPoint.Y - _penWidth / 2, _penWidth, _penWidth);
             g.DrawLine(p, _startPoint, endPoint);
             g.FillEllipse(new SolidBrush(p.Color), endPoint.X - _penWidth / 2, endPoint.Y - _penWidth / 2, _penWidth, _penWidth);
 
@@ -212,12 +201,12 @@ namespace painter
             g.DrawRectangle(p, Math.Min(_startPoint.X, endPoint.X), Math.Min(_startPoint.Y, endPoint.Y),
                             Math.Abs(_startPoint.X - endPoint.X), Math.Abs(_startPoint.Y - endPoint.Y));
         }
-        public void fillRectangle(Point endPoint,Graphics g)//实心矩形
+        public void fillRectangle(Point endPoint, Graphics g)//实心矩形
         {
             g.FillRectangle(new SolidBrush(_penColor), Math.Min(_startPoint.X, endPoint.X), Math.Min(_startPoint.Y, endPoint.Y),
                             Math.Abs(_startPoint.X - endPoint.X), Math.Abs(_startPoint.Y - endPoint.Y));
         }
-        public void fillEllipse(Point endPoint,Graphics g)//实心圆
+        public void fillEllipse(Point endPoint, Graphics g)//实心圆
         {
             g.FillEllipse(new SolidBrush(_penColor), _startPoint.X, _startPoint.Y, endPoint.X - _startPoint.X, endPoint.Y - _startPoint.Y);
         }
@@ -227,12 +216,12 @@ namespace painter
         {
             Bitmap temp = (Bitmap)last.Clone();
             Graphics gtemp = Graphics.FromImage(temp);
-            gtemp.FillEllipse(new SolidBrush(mode==MODE.DOTS?_penColor:_backColor), 
-                                curPoint.X - _penWidth / 2, curPoint.Y - _penWidth / 2, 
+            gtemp.FillEllipse(new SolidBrush(mode == MODE.DOTS ? _penColor : _backColor),
+                                curPoint.X - _penWidth / 2, curPoint.Y - _penWidth / 2,
                                 _penWidth, _penWidth);
             if (mode == MODE.ERASER)
             {
-                gtemp.DrawEllipse(new Pen(Color.Black,1),
+                gtemp.DrawEllipse(new Pen(Color.Black, 1),
                                     curPoint.X - _penWidth / 2, curPoint.Y - _penWidth / 2,
                                     _penWidth, _penWidth);
             }
@@ -244,7 +233,7 @@ namespace painter
         {
             target.DrawImage(grph, 0, 0);
         }
-        public void resize(Graphics _target,int _width, int _height)
+        public void resize(Graphics _target, int _width, int _height)
         {
             Bitmap temp = (Bitmap)grph.Clone();
             grph.Dispose();
@@ -266,7 +255,7 @@ namespace painter
             int t = ran.Next(3);
             if (_dColor)
             {
-                c[t]+=_magicX;
+                c[t] += _magicX;
                 if (c[t] > 0xff)
                 {
                     c[t] -= 2 * _magicX;
@@ -288,7 +277,7 @@ namespace painter
         {
             redo.Push(grph.Clone());
             clearBitmap(grph);
-            Graphics.FromImage(grph).DrawImage((Bitmap)undo.Pop(),0,0);
+            Graphics.FromImage(grph).DrawImage((Bitmap)undo.Pop(), 0, 0);
             last.Dispose();
             last = (Bitmap)grph.Clone();
             rePaint();
@@ -312,12 +301,12 @@ namespace painter
             return redo.Count != 0;
         }
 
-        public void save()
+        public string save()
         {
             string dir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             dir += @"\" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".bmp";
             grph.Save(dir);
-            MessageBox.Show("bmp保存已至" + dir);
+            return dir;
         }
     }
 }
